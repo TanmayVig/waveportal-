@@ -43,7 +43,8 @@ export default function App() {
   const [msg, setMsg] = useState("");
 
   // const contractAddress = "0x8D1182924934f1e5950223d6dd92674d07E2cbE2"
-  const contractAddress = "0x69ad4F1232355f22aB1ad2e04C3239DaD9Ca456c"
+  // const contractAddress = "0x69ad4F1232355f22aB1ad2e04C3239DaD9Ca456c"
+  const contractAddress = "0x07e4e668aDd7011904392E9973E2C2feAf9b1F2b"
   const contractABI = abi.abi;
 
   const getAllWaves = async () =>{
