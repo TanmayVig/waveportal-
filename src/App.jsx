@@ -44,25 +44,24 @@ export default function App() {
 
   // const contractAddress = "0x8D1182924934f1e5950223d6dd92674d07E2cbE2"
   // const contractAddress = "0x69ad4F1232355f22aB1ad2e04C3239DaD9Ca456c"
-  const contractAddress = "0x07e4e668aDd7011904392E9973E2C2feAf9b1F2b"
+  const contractAddress = "0x2E28A0E32c40dE71a5bcf790F274f6533f90cf20"
   const contractABI = abi.abi;
 
   const getAllWaves = async () =>{
     try{
       const {ethereum} = window;
       if(ethereum){
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
         const waves = await wavePortalContract.getAllWaves();
         console.log(waves);
-        let wavesCleaned = [];
-        waves.forEach(wave =>{
-          wavesCleaned.push({
+        let wavesCleaned = waves.map(wave =>{
+          return {
             address: wave.waver,
             timestamp: new Date(wave.timestamp*1000),
-            message: wave.message
-          });
+            message: wave.message,
+          };
         });
 
         setAllWaves(wavesCleaned);
@@ -72,15 +71,34 @@ export default function App() {
     } catch (error){
       console.log(error);
     }
-  }
+  };
 
   useEffect(()=>{
-    findMetaMaskAccount().then((account) => {
-      if (account !== null) {
-        setCurrentAccount(account);
-        getAllWaves();
+    let wavePortalContract;
+
+    const onNewWave= (from, timestamp, message) =>{
+      console.log("NewWave", from, timestamp, message);
+      setAllWaves(prevState=>[
+        ...prevState,
+        {
+          address: from,
+          timestamp: new Date(timestamp* 1000),
+          message: message,
+        },
+      ]);
+    };
+
+    if(window.ethereum){
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+      wavePortalContract.on("NewWave", onNewWave);
+    }
+    return () => {
+      if(wavePortalContract){
+        wavePortalContract.off("NewWave", onNewWave);
       }
-    });
+    }
   },[]);
 
   const connectWallet = async () => {
@@ -97,7 +115,7 @@ export default function App() {
 
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
-      
+      getAllWaves();
     } catch (error) {
       console.error(error);
     }
@@ -115,7 +133,7 @@ export default function App() {
         let count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
         
-        const waveTxn = await wavePortalContract.wave(msg);
+        const waveTxn = await wavePortalContract.wave(msg, {gasLimit: 300000});
         console.log("Mining...", waveTxn.hash);
         await waveTxn.wait();
         console.log("Mined -- ", waveTxn.hash);
@@ -130,7 +148,6 @@ export default function App() {
       console.log(error);
     } finally{
       setBtnState(false);
-      getAllWaves();
       setMsg("");
     }
   };
@@ -159,10 +176,10 @@ export default function App() {
           </button>}
         {allWaves.map((wave,index)=>{
       return (
-        <div key={index} style = {{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
-          <div>Message: {wave.message}</div>
-          <div>Address: {wave.address}</div>
-          <div>Time: {wave.timestamp.toString()}</div>
+        <div key={index} style = {{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px", borderRadius: "15em 50em 30em 5em" }}>
+          <div><strong>Message:</strong> {wave.message}</div>
+          <div><strong>Address:</strong> {wave.address}</div>
+          <div><strong>Time:</strong> {wave.timestamp.toString()}</div>
         </div>
       )
         })}

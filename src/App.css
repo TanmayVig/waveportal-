@@ -13,6 +13,7 @@
 }
 
 .header {
+  color: white;
   text-align: center;
   font-size: 32px;
   font-weight: 600;
@@ -51,4 +52,8 @@
     outline: none;
     border-color: #09cec0;
     box-shadow: 0 0 10px #09cec0;
+}
+
+lable{
+  color: white;
 }
