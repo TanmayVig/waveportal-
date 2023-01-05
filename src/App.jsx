@@ -44,18 +44,16 @@ export default function App() {
 
   // const contractAddress = "0x8D1182924934f1e5950223d6dd92674d07E2cbE2"
   // const contractAddress = "0x69ad4F1232355f22aB1ad2e04C3239DaD9Ca456c"
-  const contractAddress = "0x2E28A0E32c40dE71a5bcf790F274f6533f90cf20"
+  const contractAddress = "0xF2d9AA15Da62875e6BeB6481e86022D66D700B28"
   const contractABI = abi.abi;
 
   const getAllWaves = async () =>{
     try{
-      const {ethereum} = window;
-      if(ethereum){
-        const provider = new ethers.providers.Web3Provider(ethereum);
+      if(window.ethereum){
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
         const waves = await wavePortalContract.getAllWaves();
-        console.log(waves);
         let wavesCleaned = waves.map(wave =>{
           return {
             address: wave.waver,
@@ -63,7 +61,6 @@ export default function App() {
             message: wave.message,
           };
         });
-
         setAllWaves(wavesCleaned);
       }else{
         console.log("Ethereum object doesn't exist!!");
@@ -162,13 +159,16 @@ export default function App() {
         <div className="bio">
         </div>
         {currentAccount ?<>
-          <lable>Enter message: 
-          <input className="waveMsg" type="text" value={msg} onChange={(e)=>{setMsg(e.target.value)}}/>
+          <lable><h4>Enter message for Tanmay:
+          <input className="waveMsg" type="text" value={msg} onChange={(e)=>{setMsg(e.target.value)}}/></h4>
           </lable>
-        <button className="waveButton" onClick={wave} disabled={btnState}>
+        <button className="waveButton" onClick={wave} disabled={btnState || (!!(msg===""))}><strong>
           {btnState ? 
           <>Waving</> 
-          : <>Wanna Wave?</>}
+          : !!(msg==="") ? 
+          <>Enter a message!</>
+          : <>Wave?</>}
+          </strong>
         </button>
             </>
         : <button className="waveButton" onClick={connectWallet}>
@@ -176,10 +176,12 @@ export default function App() {
           </button>}
         {allWaves.map((wave,index)=>{
       return (
-        <div key={index} style = {{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px", borderRadius: "15em 50em 30em 5em" }}>
-          <div><strong>Message:</strong> {wave.message}</div>
-          <div><strong>Address:</strong> {wave.address}</div>
-          <div><strong>Time:</strong> {wave.timestamp.toString()}</div>
+        <div key={index} className="msgBox">
+          <div className="col1">
+             <div className="msgBoxFrom"><strong>From:</strong> <a href={`https://goerli.etherscan.io/address/${wave.address}`} target="_blank" rel="noopener noreferrer">{wave.address}</a></div>
+              <div className="msgBoxTime"><strong>Time:</strong> {wave.timestamp.toString()}</div>
+          </div>
+          <div className="col2"><strong>Message:</strong> {wave.message}</div>
         </div>
       )
         })}
